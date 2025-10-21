@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Planificador de Menú Semanal 🍽️</title>
+  <!-- Tailwind CSS desde CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+
+  <style>
+    :root { --bg: 255 251 235; }
+    html, body { height:100%; }
+    body { font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Apple Color Emoji","Segoe UI Emoji"; }
+    /* Bonitos scrollbars (opcionales) */
+    ::-webkit-scrollbar { height: 8px; width: 8px; }
+    ::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 999px; }
+    /* Celdas editables */
+    .cell[contenteditable]:focus { outline: 2px solid rgb(59 130 246); background: rgb(239 246 255); }
+    /* Badges de categoría */
+    .badge { font-size: 0.65rem; padding: .15rem .4rem; border-radius: 999px; }
+  </style>
+</head>
+<body class="min-h-screen bg-amber-50 text-slate-800">
+  <header class="sticky top-0 z-20 backdrop-blur bg-amber-50/75 border-b border-amber-200">
+    <div class="max-w-7xl mx-auto px-4 py-4 flex flex-col md:flex-row items-start md:items-center gap-3">
+      <h1 class="text-2xl md:text-3xl font-extrabold tracking-tight">
+        🗓️ Planificador de Menú Semanal
+      </h1>
+      <div class="flex flex-wrap gap-2 md:ml-auto">
+        <button id="btnSugerir" class="px-4 py-2 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-semibold shadow">
+          🍏 Generar sugerencias saludables
+        </button>
+        <button id="btnLimpiar" class="px-4 py-2 rounded-2xl bg-rose-600 hover:bg-rose-700 text-white font-semibold shadow">
+          🧹 Limpiar tabla
+        </button>
+        <button id="btnLista" class="px-4 py-2 rounded-2xl bg-sky-600 hover:bg-sky-700 text-white font-semibold shadow">
+          🛒 Crear lista de la compra
+        </button>
+        <button id="btnCopiar" class="px-4 py-2 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold shadow">
+          📋 Copiar lista
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-7xl mx-auto p-4 space-y-6">
+    <!-- Instrucciones -->
+    <section class="grid gap-4 md:grid-cols-2">
+      <article class="p-4 rounded-2xl bg-white shadow border border-amber-200">
+        <h2 class="font-bold text-lg mb-2">🧭 Cómo usar</h2>
+        <ol class="list-decimal list-inside space-y-1 text-sm leading-6">
+          <li>Edita cada celda y escribe tus platos para <strong>desayuno, comida y cena</strong>.</li>
+          <li>Pulsa <strong>“Generar sugerencias saludables”</strong> para rellenar la semana automáticamente con combinaciones equilibradas (evita, por ejemplo, pasta en comida y pasta en cena el mismo día).</li>
+          <li>Cuando termines, pulsa <strong>“Crear lista de la compra”</strong> para obtener los ingredientes agregados según los platos elegidos.</li>
+          <li>Añade productos manuales en el cuadro inferior si lo necesitas y usa <strong>“Copiar lista”</strong> para pegarla en tu app o enviarla por WhatsApp.</li>
+          <li>Con <strong>“Limpiar tabla”</strong> puedes empezar de cero. Se guarda automáticamente en tu navegador (local).</li>
+        </ol>
+      </article>
+      <article class="p-4 rounded-2xl bg-white shadow border border-amber-200">
+        <h2 class="font-bold text-lg mb-2">⚙️ Preferencias</h2>
+        <div class="flex flex-wrap items-center gap-4 text-sm">
+          <label class="flex items-center gap-2">
+            👨‍👩‍👧‍👦 Personas:
+            <input id="inpPersonas" type="number" min="1" value="2" class="w-20 px-3 py-1.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-sky-400 outline-none">
+          </label>
+          <label class="flex items-center gap-2">
+            ✅ Evitar repetir categoría en el día
+            <input id="chkEvitarRepetir" type="checkbox" class="scale-110 accent-emerald-600" checked>
+          </label>
+          <span class="inline-flex items-center gap-2">
+            Leyenda categorías:
+            <span class="badge bg-emerald-100 text-emerald-700">verduras</span>
+            <span class="badge bg-blue-100 text-blue-700">pescado</span>
+            <span class="badge bg-orange-100 text-orange-700">legumbre</span>
+            <span class="badge bg-yellow-100 text-yellow-800">cereal/pasta</span>
+            <span class="badge bg-rose-100 text-rose-700">ave/carne</span>
+            <span class="badge bg-cyan-100 text-cyan-700">huevo/lácteo</span>
+          </span>
+        </div>
+      </article>
+    </section>
+
+    <!-- Tabla -->
+    <section class="p-4 rounded-2xl bg-white shadow border border-amber-200 overflow-x-auto">
+      <div class="min-w-[900px]">
+        <table id="tabla" class="w-full border-separate border-spacing-0">
+          <thead>
+            <tr class="bg-amber-100/70">
+              <th class="sticky left-0 z-10 bg-amber-100/70 p-3 text-left font-bold rounded-tl-2xl">🍽️ / Día</th>
+              <th class="p-3 font-bold">Lunes</th>
+              <th class="p-3 font-bold">Martes</th>
+              <th class="p-3 font-bold">Miércoles</th>
+              <th class="p-3 font-bold">Jueves</th>
+              <th class="p-3 font-bold">Viernes</th>
+              <th class="p-3 font-bold">Sábado</th>
+              <th class="p-3 font-bold rounded-tr-2xl">Domingo</th>
+            </tr>
+          </thead>
+          <tbody>
+            <!-- Desayuno -->
+            <tr class="border-t border-amber-200">
+              <th class="sticky left-0 z-10 bg-white p-3 text-left font-semibold">🌅 Desayuno</th>
+              <td class="p-2"><div class="cell" data-meal="desayuno" contenteditable></div></td>
+              <td class="p-2"><div class="cell" data-meal="desayuno" contenteditable></div></td>
+              <td class="p-2"><div class="cell" data-meal="desayuno" contenteditable></div></td>
+              <td class="p-2"><div class="cell" data-meal="desayuno" contenteditable></div></td>
+              <td class="p-2"><div class="cell" data-meal="desayuno" contenteditable></div></td>
+              <td class="p-2"><div class="cell" data-meal="desayuno" contenteditable></div></td>
+              <td class="p-2"><div class="cell" data-meal="desayuno" contenteditable></div></td>
+            </tr>
+            <!-- Comida -->
+            <tr class="border-t border-amber-200">
+              <th class="sticky left-0 z-10 bg-white p-3 text-left font-semibold">🌞 Comida</th>
+              <td class="p-2"><div class="cell" data-meal="comida" contenteditable></div></td>
+              <td class="p-2"><div class="cell" data-meal="comida" contenteditable></div></td>
+              <td class="p-2"><div class="cell" data-meal="comida" contenteditable></div></td>
+              <td class="p-2"><div class="cell" data-meal="comida" contenteditable></div></td>
+              <td class="p-2"><div class="cell" data-meal="comida" contenteditable></div></td>
+              <td class="p-2"><div class="cell" data-meal="comida" contenteditable></div></td>
+              <td class="p-2"><div class="cell" data-meal="comida" contenteditable></div></td>
+            </tr>
+            <!-- Cena -->
+            <tr class="border-t border-amber-200">
+              <th class="sticky left-0 z-10 bg-white p-3 text-left font-semibold">🌙 Cena</th>
+              <td class="p-2"><div class="cell" data-meal="cena" contenteditable></div></td>
+              <td class="p-2"><div class="cell" data-meal="cena" contenteditable></div></td>
+              <td class="p-2"><div class="cell" data-meal="cena" contenteditable></div></td>
+              <td class="p-2"><div class="cell" data-meal="cena" contenteditable></div></td>
+              <td class="p-2"><div class="cell" data-meal="cena" contenteditable></div></td>
+              <td class="p-2"><div class="cell" data-meal="cena" contenteditable></div></td>
+              <td class="p-2"><div class="cell" data-meal="cena" contenteditable></div></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="mt-3 text-xs text-slate-500">Consejo: haz clic en cualquier celda para editar. Se guarda automáticamente.</p>
+    </section>
+
+    <!-- Lista de la compra -->
+    <section class="grid gap-4 md:grid-cols-2">
+      <article class="p-4 rounded-2xl bg-white shadow border border-amber-200">
+        <h2 class="font-bold text-lg mb-2">🛒 Lista de la compra (generada)</h2>
+        <textarea id="txtLista" class="w-full h-56 p-3 rounded-xl border border-slate-300 focus:ring-2 focus:ring-sky-400 outline-none font-mono text-sm" placeholder="Pulsa 'Crear lista de la compra' para generar los ingredientes"></textarea>
+        <p class="text-xs text-slate-500 mt-2">Basada en platos conocidos. Si escribes platos personalizados, añade los ingredientes manualmente o edítalos aquí.</p>
+      </article>
+      <article class="p-4 rounded-2xl bg-white shadow border border-amber-200">
+        <h2 class="font-bold text-lg mb-2">🧾 Notas / Extras</h2>
+        <textarea id="txtNotas" class="w-full h-56 p-3 rounded-xl border border-slate-300 focus:ring-2 focus:ring-emerald-400 outline-none font-mono text-sm" placeholder="Añade pan, bebidas, especias, limpieza, etc."></textarea>
+        <div class="mt-3 text-xs text-slate-500">Tip: La cantidad se ajusta según “Personas”.</div>
+      </article>
+    </section>
+  </main>
+
+  <footer class="max-w-7xl mx-auto p-6 text-center text-xs text-slate-500">
+    Hecho con 💚 para una semana saludable.
+  </footer>
+
+  <script>
+    // --- Biblioteca de platos saludables con categorías e ingredientes --------------------------
+    // category: 'verduras' | 'pescado' | 'legumbre' | 'cereal' | 'pasta' | 'ave' | 'carne' | 'huevo' | 'lacteo' | 'sopa'
+    // Las cantidades son por persona (aproximadas) y se multiplican por el nº de personas.
+    const DISHES = {
+      desayuno: [
+        { name: "Avena con fruta y yogur 🥣🍓", category: "cereal", ingredients: { "Copos de avena (g)": 60, "Yogur natural (g)": 125, "Fruta variada (ud)": 1, "Nueces (g)": 15, "Miel (cda)": 1 } },
+        { name: "Tostada integral con aguacate y tomate 🥑🍅", category: "cereal", ingredients: { "Pan integral (rebanadas)": 2, "Aguacate (ud)": 0.5, "Tomate (ud)": 0.5, "Aceite de oliva (cda)": 0.5 } },
+        { name: "Tortilla francesa con espinacas 🍳🌿", category: "huevo", ingredients: { "Huevos (ud)": 2, "Espinacas frescas (g)": 40, "Aceite de oliva (cda)": 0.5 } },
+        { name: "Skyr con frutos rojos y granola 🫐", category: "lacteo", ingredients: { "Skyr/Yogur griego (g)": 170, "Frutos rojos (g)": 80, "Granola (g)": 30 } },
+        { name: "Porridge de chía y plátano 🍌", category: "cereal", ingredients: { "Avena (g)": 50, "Leche/vegetal (ml)": 200, "Semillas de chía (g)": 10, "Plátano (ud)": 0.5 } },
+        { name: "Pan integral con pavo y queso fresco 🥪", category: "cereal", ingredients: { "Pan integral (rebanadas)": 2, "Pavo loncheado (g)": 40, "Queso fresco (g)": 40 } },
+      ],
+      comida: [
+        { name: "Ensalada de quinoa con garbanzos y verduras 🥗", category: "legumbre", ingredients: { "Quinoa (g)": 70, "Garbanzos cocidos (g)": 100, "Pimiento (g)": 50, "Pepino (g)": 50, "Tomate (g)": 60, "Aceite de oliva (cda)": 0.75 } },
+        { name: "Salmón al horno con brócoli y patata 🐟🥦", category: "pescado", ingredients: { "Salmón (g)": 160, "Brócoli (g)": 120, "Patata (g)": 200, "Aceite de oliva (cda)": 0.75 } },
+        { name: "Pechuga de pollo a la plancha con ensalada 🥗🍗", category: "ave", ingredients: { "Pechuga de pollo (g)": 150, "Lechuga/mezclum (g)": 60, "Tomate (g)": 60, "Aceite de oliva (cda)": 0.75 } },
+        { name: "Lentejas estofadas con verduras 🍲", category: "legumbre", ingredients: { "Lentejas (g)": 80, "Zanahoria (g)": 50, "Cebolla (g)": 40, "Pimiento (g)": 40, "Ajo (diente)": 0.5, "Aceite de oliva (cda)": 0.5 } },
+        { name: "Arroz integral con verduras salteadas 🍚", category: "cereal", ingredients: { "Arroz integral (g)": 75, "Calabacín (g)": 60, "Zanahoria (g)": 50, "Champiñón (g)": 60, "Aceite de oliva (cda)": 0.75 } },
+        { name: "Pasta integral con atún y tomate 🍝🐟", category: "pasta", ingredients: { "Pasta integral (g)": 80, "Atún natural (g)": 80, "Tomate triturado (g)": 120, "Aceite de oliva (cda)": 0.5 } },
+        { name: "Buddha bowl de tofu, verduras y bulgur 🥗", category: "verduras", ingredients: { "Tofu (g)": 120, "Bulgur (g)": 70, "Zanahoria (g)": 50, "Pepino (g)": 50, "Aguacate (ud)": 0.3 } },
+        { name: "Merluza a la plancha con verduras y cuscús 🐟", category: "pescado", ingredients: { "Merluza (g)": 160, "Cuscús (g)": 70, "Calabacín (g)": 60, "Pimiento (g)": 50 } },
+      ],
+      cena: [
+        { name: "Crema de calabaza y zanahoria + huevo duro 🍲🥚", category: "sopa", ingredients: { "Calabaza (g)": 200, "Zanahoria (g)": 80, "Cebolla (g)": 40, "Caldo/agua (ml)": 250, "Huevos (ud)": 1 } },
+        { name: "Tortilla de espárragos con ensalada 🍳", category: "huevo", ingredients: { "Huevos (ud)": 2, "Espárragos (g)": 80, "Lechuga (g)": 50, "Aceite de oliva (cda)": 0.5 } },
+        { name: "Filete de pavo + verduras al vapor 🥦", category: "ave", ingredients: { "Pavo filete (g)": 130, "Brócoli (g)": 120, "Aceite de oliva (cda)": 0.5 } },
+        { name: "Poke sencillo de salmón con arroz 🍣", category: "pescado", ingredients: { "Salmón (g)": 120, "Arroz cocido (g)": 150, "Pepino (g)": 50, "Alga/nori (g)": 5, "Soja (cda)": 0.5 } },
+        { name: "Ensalada templada de legumbres 🫘", category: "legumbre", ingredients: { "Alubias cocidas (g)": 100, "Tomate (g)": 60, "Cebolla (g)": 30, "Pimiento (g)": 40, "Aceite de oliva (cda)": 0.5 } },
+        { name: "Salteado de verduras y fideos de arroz 🥕", category: "cereal", ingredients: { "Fideos de arroz (g)": 70, "Zanahoria (g)": 50, "Pimiento (g)": 50, "Champiñón (g)": 60, "Salsa soja (cda)": 0.5 } },
+        { name: "Pasta integral con verduras al dente 🍝", category: "pasta", ingredients: { "Pasta integral (g)": 70, "Calabacín (g)": 60, "Tomate cherry (g)": 70, "Aceite de oliva (cda)": 0.5 } },
+        { name: "Caballa a la plancha y ensalada 🐟", category: "pescado", ingredients: { "Caballa (g)": 140, "Lechuga (g)": 50, "Tomate (g)": 60, "Aceite de oliva (cda)": 0.5 } },
+      ]
+    };
+
+    // Map rápido de categorías para estilos opcionales
+    const CATEGORY_STYLE = {
+      verduras: "bg-emerald-50 text-emerald-700",
+      pescado: "bg-blue-50 text-blue-700",
+      legumbre: "bg-orange-50 text-orange-700",
+      cereal: "bg-yellow-50 text-yellow-800",
+      pasta: "bg-yellow-50 text-yellow-800",
+      ave: "bg-rose-50 text-rose-700",
+      carne: "bg-rose-50 text-rose-700",
+      huevo: "bg-cyan-50 text-cyan-700",
+      lacteo: "bg-cyan-50 text-cyan-700",
+      sopa: "bg-emerald-50 text-emerald-700"
+    };
+
+    // --- Utilidades ---------------------------------------------------------------------------
+    const $ = (sel, ctx=document) => ctx.querySelector(sel);
+    const $$ = (sel, ctx=document) => Array.from(ctx.querySelectorAll(sel));
+
+    const DAYS = ["Lunes","Martes","Miércoles","Jueves","Viernes","Sábado","Domingo"];
+
+    function rnd(arr) { return arr[Math.floor(Math.random()*arr.length)]; }
+
+    function pickWithConstraints(dayIndex, evitarRepetir) {
+      // Reglas:
+      // 1) Nunca pasta en comida y pasta en cena el mismo día.
+      // 2) Si evitarRepetir=true, que comida y cena NO compartan la misma categoría principal (cereal/pasta/legumbre/pescado/ave/huevo/sopa/verduras).
+      // 3) Preferir variedad: si comida es “pescado”, intentar que cena no sea pescado.
+      const breakfast = rnd(DISHES.desayuno);
+
+      let comida, cena, tries = 0;
+      do {
+        comida = rnd(DISHES.comida);
+        // Filtramos las cenas compatibles
+        const validDinners = DISHES.cena.filter(c => {
+          if (comida.category === "pasta" && c.category === "pasta") return false; // Regla pasta x2 ❌
+          if (evitarRepetir && c.category === comida.category) return false;       // No misma categoría
+          return true;
+        });
+        cena = rnd(validDinners.length ? validDinners : DISHES.cena);
+        tries++;
+        if (tries > 50) break; // evita loop improbable
+      } while (
+        (comida.category === "pasta" && cena.category === "pasta") ||
+        (evitarRepetir && comida.category === cena.category)
+      );
+
+      return { breakfast, comida, cena };
+    }
+
+    function applyCategoryPill(el, dishName) {
+      // Buscar el plato por nombre para colorear fondo sutil (opcional)
+      const all = [...DISHES.desayuno, ...DISHES.comida, ...DISHES.cena];
+      const found = all.find(d => d.name === dishName);
+      el.parentElement.classList.remove(
+        ..."bg-emerald-50 bg-blue-50 bg-orange-50 bg-yellow-50 bg-rose-50 bg-cyan-50".split(" ")
+      );
+      if (found) {
+        const style = CATEGORY_STYLE[found.category] || "";
+        if (style) {
+          // solo fondo suave
+          const bgClass = style.split(" ").find(c => c.startsWith("bg-"));
+          if (bgClass) el.parentElement.classList.add(bgClass);
+        }
+      }
+    }
+
+    function getTableModel() {
+      // Devuelve { [day]: {desayuno, comida, cena} }
+      const model = {};
+      DAYS.forEach((_, col) => {
+        const cells = $$(`.cell:nth-child(${col+2})`, $("#tabla tbody")); // no fiable por :nth-child con thead
+      });
+      // Mejor: recorre por filas
+      const rows = $$("#tabla tbody tr");
+      const meals = ["desayuno","comida","cena"];
+      DAYS.forEach((day, colIdx) => {
+        model[day] = {};
+        rows.forEach((tr, rIdx) => {
+          const td = tr.children[colIdx+1]; // +1 por primer th (fila)
+          const div = td.querySelector(".cell");
+          model[day][meals[rIdx]] = (div.textContent || "").trim();
+        });
+      });
+      return model;
+    }
+
+    function setTableModel(model) {
+      const rows = $$("#tabla tbody tr");
+      const meals = ["desayuno","comida","cena"];
+      DAYS.forEach((day, colIdx) => {
+        rows.forEach((tr, rIdx) => {
+          const td = tr.children[colIdx+1];
+          const div = td.querySelector(".cell");
+          const text = model?.[day]?.[meals[rIdx]] ?? "";
+          div.textContent = text;
+          applyCategoryPill(div, text);
+        });
+      });
+    }
+
+    function saveToStorage() {
+      const data = {
+        model: getTableModel(),
+        personas: parseInt($("#inpPersonas").value || "2", 10),
+        evitar: $("#chkEvitarRepetir").checked,
+        lista: $("#txtLista").value,
+        notas: $("#txtNotas").value
+      };
+      localStorage.setItem("menuSemanalApp", JSON.stringify(data));
+    }
+
+    function loadFromStorage() {
+      const raw = localStorage.getItem("menuSemanalApp");
+      if (!raw) return;
+      try {
+        const data = JSON.parse(raw);
+        if (data.model) setTableModel(data.model);
+        if (data.personas) $("#inpPersonas").value = data.personas;
+        if (typeof data.evitar === "boolean") $("#chkEvitarRepetir").checked = data.evitar;
+        if (data.lista) $("#txtLista").value = data.lista;
+        if (data.notas) $("#txtNotas").value = data.notas;
+      } catch {}
+    }
+
+    function clearTable() {
+      const rows = $$("#tabla tbody tr");
+      rows.forEach(tr => {
+        $$(".cell", tr).forEach(div => {
+          div.textContent = "";
+          div.parentElement.className = "p-2";
+        });
+      });
+      $("#txtLista").value = "";
+      $("#txtNotas").value = "";
+      saveToStorage();
+    }
+
+    function generateHealthyWeek() {
+      const evitar = $("#chkEvitarRepetir").checked;
+      const model = {};
+      DAYS.forEach((day, i) => {
+        const pick = pickWithConstraints(i, evitar);
+        model[day] = {
+          desayuno: pick.breakfast.name,
+          comida: pick.comida.name,
+          cena: pick.cena.name
+        };
+      });
+      setTableModel(model);
+      saveToStorage();
+    }
+
+    // Agregación de ingredientes
+    function normalizeKey(k) {
+      return k.trim();
+    }
+
+    function multiplyQty(val, factor) {
+      const n = Number(val);
+      if (Number.isFinite(n)) return n * factor;
+      return val; // por si hay unidades no numéricas
+    }
+
+    function findDishByName(name) {
+      name = (name || "").trim();
+      if (!name) return null;
+      const all = [...DISHES.desayuno, ...DISHES.comida, ...DISHES.cena];
+      return all.find(d => d.name === name) || null;
+    }
+
+    function buildShoppingList() {
+      const personas = Math.max(1, parseInt($("#inpPersonas").value || "2", 10));
+      const model = getTableModel();
+      const agg = {}; // { itemKey: totalQty }
+      const unknown = []; // platos personalizados sin mapeo
+
+      for (const day of DAYS) {
+        for (const meal of ["desayuno","comida","cena"]) {
+          const dishName = model[day][meal];
+          const dish = findDishByName(dishName);
+          if (dish && dish.ingredients) {
+            for (const [k, v] of Object.entries(dish.ingredients)) {
+              const key = normalizeKey(k);
+              const qty = multiplyQty(v, personas);
+              if (typeof qty === "number") {
+                agg[key] = (agg[key] || 0) + qty;
+              } else {
+                // si no es numérico, solo listamos una vez por plato/persona
+                agg[key] = (agg[key] || 0) + 1 * personas;
+              }
+            }
+          } else if (dishName) {
+            unknown.push(`${dishName} (${day} - ${meal})`);
+          }
+        }
+      }
+
+      // Formateo
+      const lines = [];
+      lines.push(`🛒 Lista de la compra (para ${personas} persona${personas>1?'s':''})`);
+      lines.push(``);
+      const sorted = Object.entries(agg).sort((a,b) => a[0].localeCompare(b[0], 'es'));
+      for (const [item, qty] of sorted) {
+        lines.push(`• ${item}: ${qty}`);
+      }
+      if (unknown.length) {
+        lines.push(``);
+        lines.push(`⚠️ Ingredientes por añadir (platos personalizados):`);
+        unknown.forEach(u => lines.push(`• ${u}`));
+      }
+      $("#txtLista").value = lines.join("\n");
+      saveToStorage();
+    }
+
+    function copyListToClipboard() {
+      const ta = $("#txtLista");
+      ta.select();
+      ta.setSelectionRange(0, ta.value.length);
+      document.execCommand("copy");
+      // Pequeña notificación
+      const btn = $("#btnCopiar");
+      const old = btn.textContent;
+      btn.textContent = "✅ Copiado";
+      setTimeout(()=>btn.textContent = old, 1200);
+    }
+
+    // --- Eventos ------------------------------------------------------------------------------
+    // Guardado automático al editar celdas
+    $$("#tabla .cell").forEach(div => {
+      div.addEventListener("input", () => {
+        applyCategoryPill(div, div.textContent.trim());
+        saveToStorage();
+      });
+      // Enter hace salto de línea? mejor impedir y perder foco
+      div.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") { e.preventDefault(); div.blur(); }
+      });
+    });
+
+    $("#btnSugerir").addEventListener("click", generateHealthyWeek);
+    $("#btnLimpiar").addEventListener("click", () => {
+      if (confirm("¿Seguro que quieres limpiar toda la tabla?")) clearTable();
+    });
+    $("#btnLista").addEventListener("click", buildShoppingList);
+    $("#btnCopiar").addEventListener("click", copyListToClipboard);
+
+    $("#inpPersonas").addEventListener("input", saveToStorage);
+    $("#chkEvitarRepetir").addEventListener("change", saveToStorage);
+    $("#txtLista").addEventListener("input", saveToStorage);
+    $("#txtNotas").addEventListener("input", saveToStorage);
+
+    // Cargar estado
+    loadFromStorage();
+  </script>
+</body>
+</html>
