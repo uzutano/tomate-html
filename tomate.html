@@ -8,11 +8,18 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <meta name="theme-color" content="#7c3aed">
   <style>
-    /* Detalles finos fuera de Tailwind */
     .ring-animated { animation: glow 1.2s infinite alternate ease-in-out; }
     @keyframes glow {
       from { box-shadow: 0 0 0px rgba(124,58,237,.0), 0 0 0px rgba(236,72,153,.0); }
       to   { box-shadow: 0 0 24px rgba(124,58,237,.30), 0 0 48px rgba(236,72,153,.25); }
+    }
+    /* Overtime: anello rosso pulsante */
+    .overtime-glow {
+      animation: overtimePulse 1s infinite alternate ease-in-out;
+    }
+    @keyframes overtimePulse {
+      from { box-shadow: 0 0 0 rgba(239,68,68,0.0), 0 0 0 rgba(239,68,68,0.0); }
+      to   { box-shadow: 0 0 24px rgba(239,68,68,.35), 0 0 48px rgba(239,68,68,.28); }
     }
   </style>
 </head>
@@ -43,7 +50,7 @@
 
         <!-- Display de tiempo -->
         <div class="flex-1">
-          <div class="relative mx-auto w-56 h-56 sm:w-64 sm:h-64 rounded-full bg-gradient-to-br from-fuchsia-500 to-pink-500 p-1 ring-animated">
+          <div id="dial" class="relative mx-auto w-56 h-56 sm:w-64 sm:h-64 rounded-full bg-gradient-to-br from-fuchsia-500 to-pink-500 p-1 ring-animated">
             <div class="w-full h-full rounded-full bg-white flex items-center justify-center">
               <div class="text-center">
                 <div id="time"
@@ -103,7 +110,7 @@
       <div id="notice"
            class="hidden mt-6 rounded-xl border border-amber-300 bg-amber-50 px-4 py-3 text-amber-800">
         <p class="font-semibold">⏰ ¡Tiempo cumplido!</p>
-        <p class="text-sm">Cambiando automáticamente a la siguiente fase…</p>
+        <p class="text-sm">Cuando quieras, cambia de fase o pausa. El contador marcará el retraso.</p>
       </div>
     </section>
 
@@ -123,22 +130,20 @@
     <section class="mt-8 rounded-2xl bg-white/70 backdrop-blur ring-1 ring-gray-200 p-6">
       <h2 class="text-xl font-bold">Instrucciones de uso</h2>
       <ol class="mt-3 list-decimal pl-6 space-y-2 text-gray-700">
-        <li>Guarda este archivo como <code>pomodoro.html</code> y ábrelo con doble clic.</li>
+        
         <li>Haz clic en <strong>▶️ Iniciar</strong> para comenzar la sesión de <em>Trabajo</em> (25:00).</li>
         <li>Puedes <strong>⏸️ Pausar</strong>, <strong>🔄 Reiniciar</strong> o <strong>⏭️ Saltar fase</strong> cuando lo necesites.</li>
         <li>Al terminar un tramo, verás una <strong>alerta visual</strong> y escucharás un <strong>sonido</strong>.</li>
-        <li>El contador de <strong>ciclos</strong> aumenta cuando se completa un bloque de trabajo.</li>
+        <li>Si te pasas del tiempo, el marcador se pone <strong class="text-red-600">rojo</strong> y empieza el contador de <strong>retraso</strong>.</li>
         <li>Los contadores y el estado se guardan en tu navegador (localStorage).</li>
       </ol>
       <p class="mt-3 text-xs text-gray-500">Consejo: permite las notificaciones del sitio para ver avisos del sistema (opcional).</p>
-      <a href="https://uzutano.github.io/" style="text-decoration: none; color: blue;">⬅ Torna alla Home</a>
+      <a href="https://uzutano.github.io/" style="text-decoration: none; color: blue;">⬅ HOME PAGE</a>
     </section>
   </main>
 
   <!-- Sonido (fallback desde CDN) -->
-  <!-- Si el navegador bloquea autoplay, se reproducirá cuando haya interacción (Start) -->
   <audio id="ding" preload="auto" crossorigin="anonymous">
-    <!-- Un beep corto abierto (fallback). Si falla, se usa Web Audio API. -->
     <source src="https://cdn.jsdelivr.net/gh/naptha/tinyfiles@latest/sounds/alarms/bell.mp3" type="audio/mpeg">
     <source src="https://cdn.jsdelivr.net/gh/naptha/tinyfiles@latest/sounds/alarms/bell.ogg" type="audio/ogg">
   </audio>
@@ -155,6 +160,7 @@
     const phaseLabelEl = document.getElementById('phaseLabel');
     const emojiEl = document.getElementById('emoji');
     const cardEl = document.getElementById('card');
+    const dialEl = document.getElementById('dial');
     const noticeEl = document.getElementById('notice');
     const progressEl = document.getElementById('progress');
     const progressTextEl = document.getElementById('progressText');
@@ -174,6 +180,38 @@
     let remainingSeconds = WORK_MIN * 60;
     let timerId = null;
 
+    // Overtime
+    let isOvertime = false;
+    let overtimeSeconds = 0;
+
+    // Tab blinking / título
+    const baseTitle = 'Pomodoro Timer — 25/5';
+    let titleBlinkId = null;
+    let titleBlinkOn = false;
+
+    function setTitleStable(text) {
+      document.title = text || baseTitle;
+    }
+    function startTitleBlink() {
+      if (titleBlinkId) return;
+      titleBlinkId = setInterval(() => {
+        titleBlinkOn = !titleBlinkOn;
+        const phase = isWorkPhase ? 'Trabajo' : 'Descanso';
+        const icon  = isWorkPhase ? '💼' : '🧘';
+        const time  = isOvertime ? ('+' + fmt(overtimeSeconds)) : fmt(remainingSeconds);
+        // Alterna entre mostrar y ocultar una bala para "lampeggiare"
+        document.title = titleBlinkOn
+          ? `• ${icon} ${phase} — ${time}`
+          : `${icon} ${phase} — ${time}`;
+      }, 500);
+    }
+    function stopTitleBlink() {
+      clearInterval(titleBlinkId);
+      titleBlinkId = null;
+      titleBlinkOn = false;
+      setTitleStable();
+    }
+
     // Conteos persistentes
     const persist = {
       save() {
@@ -183,7 +221,9 @@
           completed: Number(completedCountEl.textContent) || 0,
           work: Number(workCountEl.textContent) || 0,
           rest: Number(breakCountEl.textContent) || 0,
-          isRunning
+          isRunning,
+          isOvertime,
+          overtimeSeconds
         }));
       },
       load() {
@@ -193,28 +233,25 @@
           const s = JSON.parse(raw);
           if (typeof s.isWorkPhase === 'boolean') isWorkPhase = s.isWorkPhase;
           if (typeof s.remainingSeconds === 'number' && s.remainingSeconds > 0) remainingSeconds = s.remainingSeconds;
+          isOvertime = !!s.isOvertime;
+          overtimeSeconds = Number(s.overtimeSeconds) || 0;
           completedCountEl.textContent = s.completed ?? 0;
           workCountEl.textContent = s.work ?? 0;
           breakCountEl.textContent = s.rest ?? 0;
-          // No reanudamos automáticamente para evitar autoplay de audio.
         } catch {}
       }
     };
 
     // Notificaciones del sistema (opcional)
     if ('Notification' in window && Notification.permission === 'default') {
-      // Pedimos permiso tras un pequeño retraso para no ser invasivos
       setTimeout(() => Notification.requestPermission().catch(() => {}), 1500);
     }
 
     // Sonido: Web Audio (seguro) + fallback <audio>
     let audioCtx = null;
     function beep() {
-      // Intentar reproducir el <audio> CDN
       const el = document.getElementById('ding');
       const tryTag = () => el.play().catch(() => {});
-
-      // Además generamos un beep corto con Web Audio (no requiere archivo)
       try {
         if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         const o = audioCtx.createOscillator();
@@ -222,11 +259,11 @@
         o.type = 'sine';
         o.frequency.setValueAtTime(880, audioCtx.currentTime);
         g.gain.setValueAtTime(0.0001, audioCtx.currentTime);
-        g.gain.exponentialRampToValueAtTime(0.2, audioCtx.currentTime + 0.01);
-        g.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.35);
+        g.gain.exponentialRampToValueAtTime(0.25, audioCtx.currentTime + 0.01);
+        g.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.45);
         o.connect(g); g.connect(audioCtx.destination);
         o.start();
-        o.stop(audioCtx.currentTime + 0.37);
+        o.stop(audioCtx.currentTime + 0.47);
       } catch {}
       tryTag();
     }
@@ -245,13 +282,21 @@
         emojiEl.textContent = '💼';
         cardEl.classList.remove('bg-sky-50');
         cardEl.classList.add('bg-white/80');
-        document.body.style.setProperty('--phase-color', '#7c3aed');
+        dialEl.classList.remove('overtime-glow');
+        dialEl.classList.add('ring-animated');
+        dialEl.style.backgroundImage = 'linear-gradient(to bottom right, rgb(217,70,239), rgb(236,72,153))';
+        timeEl.classList.remove('text-red-600');
+        progressEl.className = 'h-2 bg-gradient-to-r from-fuchsia-500 to-pink-500';
       } else {
         phaseLabelEl.textContent = 'Descanso';
-        emojiEl.textContent = '🧘‍♀️';
+        emojiEl.textContent = '🧘';
         cardEl.classList.remove('bg-white/80');
         cardEl.classList.add('bg-sky-50');
-        document.body.style.setProperty('--phase-color', '#0284c7');
+        dialEl.classList.remove('overtime-glow');
+        dialEl.classList.add('ring-animated');
+        dialEl.style.backgroundImage = 'linear-gradient(to bottom right, rgb(14,165,233), rgb(56,189,248))';
+        timeEl.classList.remove('text-red-600');
+        progressEl.className = 'h-2 bg-gradient-to-r from-sky-500 to-cyan-400';
       }
       updateProgress();
     }
@@ -259,42 +304,63 @@
     // Progreso %
     function updateProgress() {
       const total = (isWorkPhase ? WORK_MIN : BREAK_MIN) * 60;
-      const done = total - remainingSeconds;
+      const done = Math.min(total, total - remainingSeconds);
       const pct = Math.max(0, Math.min(100, Math.round((done / total) * 100)));
       progressEl.style.width = pct + '%';
       progressTextEl.textContent = pct + '%';
     }
 
+    // Entrar en modo overtime (retraso)
+    function enterOvertime() {
+      isOvertime = true;
+      overtimeSeconds = 0;
+      // UI roja
+      timeEl.classList.add('text-red-600');
+      dialEl.classList.remove('ring-animated');
+      dialEl.classList.add('overtime-glow');
+      dialEl.style.backgroundImage = 'linear-gradient(to bottom right, rgb(239,68,68), rgb(248,113,113))';
+      progressEl.style.width = '100%';
+      progressEl.className = 'h-2 bg-red-500';
+      showNotice();
+      beep();
+      showSystemNotification();
+    }
+
+    // Salir de overtime
+    function exitOvertime() {
+      isOvertime = false;
+      overtimeSeconds = 0;
+      timeEl.classList.remove('text-red-600');
+      dialEl.classList.remove('overtime-glow');
+      dialEl.classList.add('ring-animated');
+      applyPhaseUI();
+      hideNotice();
+    }
+
     // Tick
     function tick() {
       if (!isRunning) return;
-      remainingSeconds = Math.max(0, remainingSeconds - 1);
-      timeEl.textContent = fmt(remainingSeconds);
-      updateProgress();
 
-      if (remainingSeconds === 0) {
-        // Aviso visual + sonido + notificación
-        showNotice();
-        beep();
-        showSystemNotification();
+      if (!isOvertime) {
+        remainingSeconds = Math.max(0, remainingSeconds - 1);
+        timeEl.textContent = fmt(remainingSeconds);
+        updateProgress();
 
-        // Conteos
-        if (isWorkPhase) {
-          workCountEl.textContent = Number(workCountEl.textContent) + 1;
-          completedCountEl.textContent = Number(completedCountEl.textContent) + 1;
-        } else {
-          breakCountEl.textContent = Number(breakCountEl.textContent) + 1;
+        if (remainingSeconds === 0) {
+          // No cambiamos de fase automáticamente: entramos en overtime
+          enterOvertime();
         }
-
-        // Cambiar fase automáticamente tras breve pausa visual
-        setTimeout(() => {
-          hideNotice();
-          switchPhase();
-          persist.save();
-        }, 1200);
       } else {
-        persist.save();
+        // Contador de retraso
+        overtimeSeconds += 1;
+        timeEl.textContent = '+' + fmt(overtimeSeconds);
       }
+
+      // Actualiza el título (para el lampeggio)
+      // Mostramos el tiempo actual según estado
+      if (!titleBlinkId) startTitleBlink();
+
+      persist.save();
     }
 
     function showNotice() {
@@ -309,36 +375,40 @@
     function showSystemNotification() {
       if ('Notification' in window && Notification.permission === 'granted') {
         const title = isWorkPhase ? '¡Trabajo terminado!' : '¡Descanso terminado!';
-        const body = isWorkPhase ? 'Toca descansar 5 minutos.' : 'Volvemos al enfoque: 25 minutos.';
-        try { new Notification(title, { body, icon: 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent('⚡') }); } catch {}
+        const body = 'El contador marcará el retraso hasta que cambies de fase.';
+        try { new Notification(title, { body }); } catch {}
       }
     }
 
     function switchPhase() {
+      // Al cambiar de fase, salimos de overtime si estuviera activo
+      exitOvertime();
       isWorkPhase = !isWorkPhase;
       remainingSeconds = (isWorkPhase ? WORK_MIN : BREAK_MIN) * 60;
       timeEl.textContent = fmt(remainingSeconds);
       applyPhaseUI();
-      // Continuar corriendo si estaba en marcha
+      // Seguimos corriendo si estaba en marcha
       if (isRunning) startTimerLoop();
     }
 
     function startTimerLoop() {
       clearInterval(timerId);
       timerId = setInterval(tick, 1000);
+      // Asegura lampeggio en marcha
+      startTitleBlink();
     }
 
     // Controles
     startBtn.addEventListener('click', () => {
       if (!isRunning) {
         isRunning = true;
-        // Desbloquear audio contexts si hace falta
         try {
           const el = document.getElementById('ding');
           el.play().then(() => el.pause()).catch(() => {});
           if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
           if (audioCtx.state === 'suspended') audioCtx.resume().catch(() => {});
         } catch {}
+        startTitleBlink();
         startTimerLoop();
       }
       persist.save();
@@ -347,13 +417,17 @@
     pauseBtn.addEventListener('click', () => {
       isRunning = false;
       clearInterval(timerId);
+      stopTitleBlink();
+      // Mantiene el tiempo visible (incluido +mm:ss si overtime)
       persist.save();
     });
 
     resetBtn.addEventListener('click', () => {
       isRunning = false;
       clearInterval(timerId);
+      stopTitleBlink();
       isWorkPhase = true;
+      exitOvertime();
       remainingSeconds = WORK_MIN * 60;
       timeEl.textContent = fmt(remainingSeconds);
       applyPhaseUI();
@@ -370,9 +444,15 @@
     // Inicializar
     (function init() {
       persist.load();
-      timeEl.textContent = fmt(remainingSeconds);
-      applyPhaseUI();
+      if (isOvertime) {
+        // Si recargaste en overtime, restaura UI roja
+        enterOvertime();
+      } else {
+        timeEl.textContent = fmt(remainingSeconds);
+        applyPhaseUI();
+      }
       updateProgress();
+      setTitleStable();
     })();
   </script>
 </body>
