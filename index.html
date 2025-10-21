@@ -1,42 +1,82 @@
 <!DOCTYPE html>
-<html lang="it">
+<html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Homepage Tomato HTML</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>My GitHub Experiments Project</title>
   <style>
+    /* === POST-PUNK MINIMALIST === */
     body {
-      font-family: Arial, sans-serif;
-      background: #f7f7f7;
-      padding: 2rem;
+      margin: 0;
+      padding: 0;
+      font-family: "Courier New", monospace;
+      background-color: #0d0d0d;
+      color: #e0e0e0;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      letter-spacing: 1px;
     }
+
     h1 {
-      color: #2c3e50;
+      font-size: 2.8rem;
+      text-transform: uppercase;
+      border: 2px solid #e0e0e0;
+      padding: 20px 40px;
+      display: inline-block;
+      margin-bottom: 40px;
     }
+
+    p {
+      font-size: 1.1rem;
+      margin-bottom: 50px;
+      color: #aaaaaa;
+    }
+
     ul {
       list-style: none;
       padding: 0;
     }
+
     li {
-      margin: 8px 0;
+      margin: 15px 0;
     }
+
     a {
+      color: #e0e0e0;
       text-decoration: none;
-      color: #2980b9;
-      font-weight: bold;
+      font-size: 1.3rem;
+      border-bottom: 1px solid transparent;
+      transition: 0.3s;
     }
+
     a:hover {
-      text-decoration: underline;
+      border-bottom: 1px solid #e0e0e0;
+      color: #ffffff;
+      letter-spacing: 2px;
+    }
+
+    footer {
+      position: fixed;
+      bottom: 20px;
+      font-size: 0.8rem;
+      color: #555;
     }
   </style>
 </head>
 <body>
-  <h1>🍅 Benvenuto nel mio sito Tomato!</h1>
-  <p>Qui puoi navigare tra le varie pagine HTML:</p>
+  <h1>My GitHub Experiments Project</h1>
+  <p>// A collection of weird, beautiful, and unfinished code //</p>
+
   <ul>
-    <li><a href="tomate.html">➡️ Pagina principale Pomodoro</a></li>
-    <li><a href="pagina2.html">➡️ Pagina 2</a></li>
-    <li><a href="pagina3.html">➡️ Pagina 3</a></li>
+    <li><a href="tomate.html">🍅 Pomodoro Timer</a></li>
+    <li><a href="pagina2.html">📄 Second Experiment</a></li>
+    <li><a href="pagina3.html">⚙️ Prototype #3</a></li>
   </ul>
+
+  <footer>© 2025 – Built with caffeine & chaos ☕</footer>
 </body>
 </html>
