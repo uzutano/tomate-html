@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Palette de Couleurs - Économie & Bien-être</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            padding: 30px;
+            background: linear-gradient(135deg, #F5F5F4 0%, #FAF9F6 100%);
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 16px;
+            padding: 40px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+        }
+        
+        h1 {
+            color: #1E293B;
+            margin-bottom: 10px;
+            font-size: 2em;
+        }
+        
+        .subtitle {
+            color: #64748B;
+            margin-bottom: 40px;
+            font-size: 1.1em;
+        }
+        
+        .section {
+            margin-bottom: 40px;
+        }
+        
+        .section h2 {
+            color: #334155;
+            margin-bottom: 20px;
+            font-size: 1.4em;
+            border-left: 4px solid #0D9488;
+            padding-left: 15px;
+        }
+        
+        .colors-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .color-card {
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .color-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+        }
+        
+        .color-preview {
+            height: 120px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 0.9em;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        
+        .color-info {
+            padding: 15px;
+            background: #FAFAFA;
+        }
+        
+        .color-name {
+            font-weight: 600;
+            color: #1E293B;
+            margin-bottom: 8px;
+            font-size: 1em;
+        }
+        
+        .color-hex {
+            font-family: 'Courier New', monospace;
+            color: #0D9488;
+            font-size: 0.95em;
+            margin-bottom: 5px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .color-rgb {
+            font-family: 'Courier New', monospace;
+            color: #64748B;
+            font-size: 0.85em;
+        }
+        
+        .copy-btn {
+            background: #0D9488;
+            color: white;
+            border: none;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.75em;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        
+        .copy-btn:hover {
+            background: #0F766E;
+        }
+        
+        .usage {
+            background: #F8FAFC;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 30px;
+        }
+        
+        .usage h3 {
+            color: #334155;
+            margin-bottom: 15px;
+        }
+        
+        .usage-list {
+            list-style: none;
+            padding-left: 0;
+        }
+        
+        .usage-list li {
+            padding: 8px 0;
+            color: #475569;
+            border-bottom: 1px solid #E2E8F0;
+        }
+        
+        .usage-list li:last-child {
+            border-bottom: none;
+        }
+        
+        .wordpress-code {
+            background: #1E293B;
+            color: #E2E8F0;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 20px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            overflow-x: auto;
+        }
+        
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: #0D9488;
+            color: white;
+            padding: 15px 25px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.3s ease;
+            pointer-events: none;
+        }
+        
+        .toast.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Palette de Couleurs - Économie & Bien-être</h1>
+        <p class="subtitle">Thèmes : économie, bien-être, société, choix alternatifs, monnaie, projets, futur, liberté</p>
+        
+        <div class="section">
+            <h2>Couleurs Primaires</h2>
+            <div class="colors-grid">
+                <div class="color-card" onclick="copyColor('#0D9488')">
+                    <div class="color-preview" style="background-color: #0D9488;">CLIQUEZ POUR COPIER</div>
+                    <div class="color-info">
+                        <div class="color-name">Turquoise Profond</div>
+                        <div class="color-hex">#0D9488 <button class="copy-btn" onclick="event.stopPropagation(); copyColor('#0D9488')">COPIER</button></div>
+                        <div class="color-rgb">RGB(13, 148, 136)</div>
+                    </div>
+                </div>
+                
+                <div class="color-card" onclick="copyColor('#4338CA')">
+                    <div class="color-preview" style="background-color: #4338CA;">CLIQUEZ POUR COPIER</div>
+                    <div class="color-info">
+                        <div class="color-name">Bleu Indigo</div>
+                        <div class="color-hex">#4338CA <button class="copy-btn" onclick="event.stopPropagation(); copyColor('#4338CA')">COPIER</button></div>
+                        <div class="color-rgb">RGB(67, 56, 202)</div>
+                    </div>
+                </div>
+                
+                <div class="color-card" onclick="copyColor('#D97706')">
+                    <div class="color-preview" style="background-color: #D97706;">CLIQUEZ POUR COPIER</div>
+                    <div class="color-info">
+                        <div class="color-name">Ambre/Or</div>
+                        <div class="color-hex">#D97706 <button class="copy-btn" onclick="event.stopPropagation(); copyColor('#D97706')">COPIER</button></div>
+                        <div class="color-rgb">RGB(217, 119, 6)</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="section">
+            <h2>Couleurs Secondaires</h2>
+            <div class="colors-grid">
+                <div class="color-card" onclick="copyColor('#7C3AED')">
+                    <div class="color-preview" style="background-color: #7C3AED;">CLIQUEZ POUR COPIER</div>
+                    <div class="color-info">
+                        <div class="color-name">Violet Innovation</div>
+                        <div class="color-hex">#7C3AED <button class="copy-btn" onclick="event.stopPropagation(); copyColor('#7C3AED')">COPIER</button></div>
+                        <div class="color-rgb">RGB(124, 58, 237)</div>
+                    </div>
+                </div>
+                
+                <div class="color-card" onclick="copyColor('#84CC16')">
+                    <div class="color-preview" style="background-color: #84CC16;">CLIQUEZ POUR COPIER</div>
+                    <div class="color-info">
+                        <div class="color-name">Vert Citron Vital</div>
+                        <div class="color-hex">#84CC16 <button class="copy-btn" onclick="event.stopPropagation(); copyColor('#84CC16')">COPIER</button></div>
+                        <div class="color-rgb">RGB(132, 204, 22)</div>
+                    </div>
+                </div>
+                
+                <div class="color-card" onclick="copyColor('#EAB308')">
+                    <div class="color-preview" style="background-color: #EAB308;">CLIQUEZ POUR COPIER</div>
+                    <div class="color-info">
+                        <div class="color-name">Jaune Solaire</div>
+                        <div class="color-hex">#EAB308 <button class="copy-btn" onclick="event.stopPropagation(); copyColor('#EAB308')">COPIER</button></div>
+                        <div class="color-rgb">RGB(234, 179, 8)</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="section">
+            <h2>Couleurs Neutres</h2>
+            <div class="colors-grid">
+                <div class="color-card" onclick="copyColor('#1E293B')">
+                    <div class="color-preview" style="background-color: #1E293B;">CLIQUEZ POUR COPIER</div>
+                    <div class="color-info">
+                        <div class="color-name">Ardoise Foncé</div>
+                        <div class="color-hex">#1E293B <button class="copy-btn" onclick="event.stopPropagation(); copyColor('#1E293B')">COPIER</button></div>
+                        <div class="color-rgb">RGB(30, 41, 59)</div>
+                    </div>
+                </div>
+                
+                <div class="color-card" onclick="copyColor('#64748B')">
+                    <div class="color-preview" style="background-color: #64748B;">CLIQUEZ POUR COPIER</div>
+                    <div class="color-info">
+                        <div class="color-name">Ardoise Moyen</div>
+                        <div class="color-hex">#64748B <button class="copy-btn" onclick="event.stopPropagation(); copyColor('#64748B')">COPIER</button></div>
+                        <div class="color-rgb">RGB(100, 116, 139)</div>
+                    </div>
+                </div>
+                
+                <div class="color-card" onclick="copyColor('#F5F5F4')">
+                    <div class="color-preview" style="background-color: #F5F5F4; color: #1E293B;">CLIQUEZ POUR COPIER</div>
+                    <div class="color-info">
+                        <div class="color-name">Beige Clair</div>
+                        <div class="color-hex">#F5F5F4 <button class="copy-btn" onclick="event.stopPropagation(); copyColor('#F5F5F4')">COPIER</button></div>
+                        <div class="color-rgb">RGB(245, 245, 244)</div>
+                    </div>
+                </div>
+                
+                <div class="color-card" onclick="copyColor('#FFFFFF')">
+                    <div class="color-preview" style="background-color: #FFFFFF; color: #1E293B; border: 1px solid #E2E8F0;">CLIQUEZ POUR COPIER</div>
+                    <div class="color-info">
+                        <div class="color-name">Blanc Pur</div>
+                        <div class="color-hex">#FFFFFF <button class="copy-btn" onclick="event.stopPropagation(); copyColor('#FFFFFF')">COPIER</button></div>
+                        <div class="color-rgb">RGB(255, 255, 255)</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="usage">
+            <h3>📋 Utilisation Recommandée des Couleurs</h3>
+            <ul class="usage-list">
+                <li><strong>Turquoise Profond (#0D9488) :</strong> Boutons principaux, liens, éléments de navigation, icônes importantes</li>
+                <li><strong>Bleu Indigo (#4338CA) :</strong> Titres principaux, appels à l'action secondaires, éléments de confiance</li>
+                <li><strong>Ambre/Or (#D97706) :</strong> Accents pour contenus économiques, mises en évidence, badges</li>
+                <li><strong>Violet (#7C3AED) :</strong> Éléments innovants, sections "futur", projets spéciaux</li>
+                <li><strong>Vert Citron (#84CC16) :</strong> Indicateurs positifs, bien-être, croissance</li>
+                <li><strong>Jaune Solaire (#EAB308) :</strong> Optimisme, énergie, liberté, notifications positives</li>
+                <li><strong>Ardoise Foncé (#1E293B) :</strong> Texte principal, en-têtes</li>
+                <li><strong>Ardoise Moyen (#64748B) :</strong> Texte secondaire, descriptions</li>
+                <li><strong>Beige/Blanc :</strong> Arrière-plans, cartes, espaces</li>
+            </ul>
+        </div>
+        
+        <div class="wordpress-code">
+/* Codice CSS per WordPress Kadence Child */
+<br><br>
+:root {<br>
+&nbsp;&nbsp;/* Colori Primari */<br>
+&nbsp;&nbsp;--color-primary-teal: #0D9488;<br>
+&nbsp;&nbsp;--color-primary-indigo: #4338CA;<br>
+&nbsp;&nbsp;--color-primary-amber: #D97706;<br>
+<br>
+&nbsp;&nbsp;/* Colori Secondari */<br>
+&nbsp;&nbsp;--color-secondary-purple: #7C3AED;<br>
+&nbsp;&nbsp;--color-secondary-lime: #84CC16;<br>
+&nbsp;&nbsp;--color-secondary-yellow: #EAB308;<br>
+<br>
+&nbsp;&nbsp;/* Neutri */<br>
+&nbsp;&nbsp;--color-neutral-dark: #1E293B;<br>
+&nbsp;&nbsp;--color-neutral-medium: #64748B;<br>
+&nbsp;&nbsp;--color-neutral-light: #F5F5F4;<br>
+&nbsp;&nbsp;--color-neutral-white: #FFFFFF;<br>
+}
+        </div>
+    </div>
+    
+    <div class="toast" id="toast">Code couleur copié !</div>
+    
+    <script>
+        function copyColor(hex) {
+            navigator.clipboard.writeText(hex).then(() => {
+                const toast = document.getElementById('toast');
+                toast.classList.add('show');
+                setTimeout(() => {
+                    toast.classList.remove('show');
+                }, 2000);
+            });
+        }
+    </script>
+</body>
+</html>
